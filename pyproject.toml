@@ -1,0 +1,40 @@
+[project]
+name = "qhack"
+version = "0.1.0"
+description = "COMS 4995W Lab-to-Market: Quantum & AI - hackathon workspace"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "qiskit>=2.0",
+    "qiskit-aer>=0.17",
+    "qiskit-ibm-runtime>=0.40",
+    # Capped: Windows Smart App Control blocks the unsigned DLLs of brand-new numpy
+    # releases until they build reputation. Raise the cap once a newer one loads.
+    "numpy>=2.0,<2.5",
+    "scipy",
+    "matplotlib",
+    "pylatexenc",
+    "python-dotenv",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+    "jupyterlab",
+    "ipykernel",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/qhack"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: noisy-simulator tests that take longer"]
+
+[tool.ruff]
+line-length = 100
