@@ -26,6 +26,19 @@ numpy is capped in `pyproject.toml`.
 | `src/qhack/run.py` | `run_counts(circuit, backend)` and `expectation_values(circuit, observables, backend)` |
 | `tests/` | Smoke tests (Bell state on ideal and noisy simulators) |
 | `notebooks/` | Exploration and demo notebooks |
+| `scripts/check_env.py` | Pre-flight check: a small real computation in every installed toolkit |
+| `problems/` | The challenge statements, once released |
+| `solution/` | The chosen challenge's code and `WRITEUP.md` |
+
+## Before the hackathon
+
+```
+uv run python scripts/check_env.py
+```
+
+All 14 checks should pass. They cover VQE, QAOA, molecular Hamiltonians, error-correction
+decoding, tensor networks, PyTorch, and quantum kernels, and each one doubles as a snippet to
+copy from.
 
 ## Usage
 
