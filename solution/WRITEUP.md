@@ -118,13 +118,55 @@ instead of waiting about 29 ms for a message to cross.
 - Waiting for the line nets $100 minus whatever the delay costs. The entangled strategy
   nets $63.92. So **the delay must cost more than $36.08 per round**, 36% of the
   opportunity, before quantum wins.
-- If the opportunity fades exponentially, that means a **half-life under 46 ms**.
-- Illustrative block trade: a $10M order chasing 20 basis points is a $20,000 opportunity.
-  If that edge fades over 30 minutes, 29 ms of delay costs **about $0.23**, one
-  hundred-thousandth of the opportunity. The block's half-life is roughly 40,000 times too
-  long for the delay to matter.
-- The random price move over 29 ms on that order is about $177 (one standard deviation, at
+- If the opportunity fades exponentially, that means a **half-life under 46 ms**, or about
+  1.5 times the line's delay whatever the distance.
+- **Line delay, checked against published data.** The fastest transatlantic cable, Hibernia
+  Express, was tested at under 58.95 ms between New York and London [1]. I read that as a
+  round trip, so 29.5 ms one way. My estimate from distance was 29.4 ms.
+- **Block order, from published data.** In an NBER study of institutional algorithmic orders
+  (2012 to 2016), the average order was about $287,000 worked over about 84 minutes [2].
+  If the desk is chasing 20 basis points (my assumption), that is a $574 opportunity. Reading
+  84 minutes as the half-life, a 29 ms wait costs **a quarter of a cent**: 0.0004% of the
+  opportunity against the 36% needed. The order's half-life is about 110,000 times too long.
+- The random price move over 29 ms on that order is about $5 (one standard deviation, at
   25% annual volatility), but it is as likely to help as to hurt, so it is risk, not cost.
+
+### Do any trades fade that fast? Would this work for high-frequency trading?
+
+**Yes, some trades fade that fast.** They are high-frequency arbitrage, not block orders.
+
+- Arbitrage between S&P 500 futures in Chicago and the SPY fund in New York lasted a median
+  of 97 ms in 2005 and 7 ms in 2011, with about a thousand opportunities a day [3].
+- On the London Stock Exchange, races to trade on stale quotes last 5 to 10 millionths of a
+  second and happen about once a minute per FTSE 100 stock. The sums at stake are about
+  $5 billion a year across global equity markets [4].
+
+**So high-frequency trading passes the time test.** At a 7 ms half-life, waiting 29 ms for
+the line nets $5.43 a round against $63.92 for quantum.
+
+**It also fixes the distance problem, which I had not expected.** For edges this short, a
+short link is enough. The NYSE data centre in Mahwah and the Secaucus trading hub are 118
+microseconds apart by the fastest wireless line [5], which is about 35 km and inside the
+startup's 40 km test range. Between those two sites quantum would beat the line for any
+opportunity with a half-life under 0.18 ms.
+
+**It still fails on three other counts:**
+
+- **Those trades are about moving information.** The futures price jumps in one place and
+  the other venue has to find out. Entanglement carries no information, so it cannot win
+  that race. The protocol only helps when each site has its own independent signal and
+  neither needs to know the other's.
+- **The pairs arrive too slowly.** 1,000 pairs a second is one pair per millisecond. A race
+  decided in 5 to 10 microseconds is over 100 to 200 times faster than that. The desks would
+  need a pair already waiting, which means quantum memory, and the case file mentions none.
+- **The stakes are small.** The published work describes the average race as worth a small
+  amount [4]. With a $0.08 running cost and a 7-point win-rate gain, quantum only pays for
+  itself when the stake is above **$0.56 a round**, and the value added is 14% of the stake
+  less 8 cents. The $100 stake in the case file is the startup's number.
+
+High-frequency trading is therefore the one place the time condition holds, and it is a
+different product from the block-order service in the pitch. Nothing in the case file shows
+it passes the other conditions.
 
 ### Can the link reach?
 
@@ -132,8 +174,9 @@ instead of waiting about 29 ms for a message to cross.
   falls from 1,000 per second to about 10⁻¹⁰⁸ per second.
 - With any noise floor in the range I swept, the win rate drops below 75% between 113 km
   and 312 km (panel 3). Even with no noise, the link delivers one pair an hour at 368 km.
-- At 40 km, where the link works, a message takes 0.13 ms, so the line is even harder to
-  beat on time.
+- At 40 km, where the link works, a message takes 0.13 to 0.2 ms. That is far too fast
+  for the line to lose on a block order, though not on a microsecond-scale trade (see the
+  high-frequency section above).
 
 ### How robust is the edge to the game's shape?
 
@@ -151,11 +194,17 @@ Outside that range the desks do as well by ignoring the pair.
 | Who bears $0.08 | the startup | it is selling a service on its own link |
 | $50M | firm's gross gain with quantum | the payoff accrues to the desks |
 | One round | one coordinated block-order decision | the startup's proposed first service |
-| New York to London | 5,570 km great circle; 6,000 km fibre route; 29 ms one-way | geography and light speed in glass (index 1.47) |
+| New York to London | 5,570 km great circle; 6,000 km fibre route; 29 ms one-way | geography and light speed in glass (index 1.47); matches the published 58.95 ms, read as round trip [1] |
 | Fibre loss | 0.2 dB/km | standard telecom fibre |
 | Noise | constant floor of 0.001 to 10 false pairs per second, white noise | swept over four orders of magnitude; the conclusion does not move |
 | "1,000 pairs per second" | delivered rate at 40 km | the more favourable reading |
-| Block trade | $10M, 20 bp edge, 30-minute half-life, 25% volatility | my illustration; the break-even half-life of 46 ms does not depend on it |
+| Block order size and duration | $287,000 over 84 minutes | published average institutional order [2]; I read the working time as the opportunity's half-life |
+| Block order edge and volatility | 20 bp; 25% a year | mine; the 46 ms break-even does not depend on either |
+| Blocks need information exchanged | size, price and timing are shared between desks | my understanding of block trading, not a case fact |
+| Block signals are not independent | both desks work the same order | my understanding, not a case fact |
+| Blocks are infrequent | far fewer than 3,100 a day per pair of desks | my judgement; blocks of 10,000 shares or more are about 0.03% of S&P 500 trades [6] |
+| Fast trades exist | 7 ms median (2011) for index arbitrage; 5 to 10 microseconds for equity races | published [3][4] |
+| Exchange data centres | 118 microseconds apart one way, about 35 km | published latency [5]; distance is my conversion at light speed |
 | Take rates | 10%, 20%, 30% | illustrative |
 
 ## Phase 3: Recommendation
@@ -174,8 +223,10 @@ defensible business in the market the startup has chosen.
    Per round: line $100, quantum $63.92, silent classical $50.
 3. **Time is the only thing the product can sell, and block orders do not need it.** Quantum
    beats the line only when a 29 ms wait destroys more than 36% of a trade's value, which
-   means opportunities with a half-life under 46 ms. For an illustrative block order the
-   same wait costs about 23 cents on a $20,000 opportunity.
+   means a half-life under 46 ms. The average institutional order is worked over 84 minutes;
+   for it, the same wait costs a quarter of a cent on a $574 opportunity. Trades that do
+   fade that fast exist in high-frequency arbitrage (7 ms, down to microseconds), but those
+   are races to move information, which entanglement cannot do.
 4. **The $50M is mostly not theirs.** Read as the customer's gain, it needs 781,250 rounds a
    year, and $39M of it is available from a free classical strategy. The value added is at
    most $10.9M a year, the startup keeps a fraction of that, and only where the line cannot
@@ -187,30 +238,56 @@ defensible business in the market the startup has chosen.
 6. **The edge is fragile.** It needs the trading problem to match the game exactly,
    including near-50/50 independent signals.
 
-**Did the initial hypothesis survive?** Yes, with one correction. I expected the line to
+**Conditions for profitability.** All five must hold at once. `D` is what a trade loses
+while the desks wait for the line.
+
+| # | Condition | Threshold | Block orders | High-frequency arbitrage |
+| --- | --- | --- | --- | --- |
+| 1 | Waiting for the line costs more than quantum's shortfall | `D` over $36.08 a round; half-life under 1.5 times the line delay (46 ms New York to London) | Fails: 84 minutes, `D` is $0.002 | Passes: 7 ms down to microseconds |
+| 2 | Each desk can act without knowing what the other saw | entanglement carries no message | Fails: desks share size, price, timing (my assumption) | Fails: the trade is the news from the other venue |
+| 3 | The payoff has the game's shape | independent signals, each 42% to 58% likely, "match unless both are 1" | Fails: same order at both desks (my assumption) | Not shown |
+| 4 | Pairs arrive in time and good enough | win rate over 75.04% at the real distance; a pair ready when needed | Fails: 5,570 km against a limit of about 110 to 310 km | Distance passes at about 35 km; timing fails, one pair per ms against races of 5 to 10 microseconds |
+| 5 | The fee covers costs and leaves the firm better off | fee between $0.08 and the value added, which is $63.92 minus the larger of $50 and $100 minus `D`, so at most $13.92; stake above $0.56 | Fails: nothing added | Unclear: stakes per race are small |
+
+Startup profit is rounds times (fee minus $0.08), less the cost of the link.
+
+**Did the initial hypothesis survive?** Yes, with two corrections. I expected the line to
 make the quantum protocol pointless in every case. The experiment shows a regime where that
-is wrong: trades that fade within tens of milliseconds. Such trades may exist in
-high-frequency trading, but that is not the block-order service the startup proposes, it
-still needs the exact game payoff, and it needs a long-distance link that does not exist.
-The experiment also changed how I read the $50M, from "implausible" to "mostly attributable
-to something free".
+is wrong: trades that fade within milliseconds, which published data confirms exist in
+high-frequency arbitrage. I also expected distance to rule the link out everywhere, and it
+does not: exchange data centres about 35 km apart are within its tested range. Neither
+correction rescues the pitch. The proposed service is block orders, which fail the time
+test by a factor of about 110,000, and high-frequency arbitrage fails on information, pair
+timing and stake size. The experiment also changed how I read the $50M, from "implausible"
+to "mostly attributable to something free".
 
 **What would change the recommendation**
 
-- A named customer workflow where the opportunity half-life is under about 46 ms and the
-  payoff has this game's structure.
+- A named customer workflow that passes all five conditions above: in particular a
+  half-life under 1.5 times the line delay, and two independent local signals.
+- Evidence of quantum memory, or a pair rate high enough to have a pair ready within the
+  life of the trade.
 - Entanglement delivered between two real trading venues with pair quality above 0.71.
 - The raw trial data, including whether rounds with a lost photon were counted. If they
   were dropped, 82% overstates what a desk that must answer every round would get.
 
 **What I would do next**
 
-- Send the startup those three requests before any further diligence spend.
+- Send the startup those requests before any further diligence spend.
 - Ask what the three patents cover. If they cover the source or the link hardware, the asset
   may be worth more in markets where the absence of communication is the point and a
   certified violation is the product: secure key exchange and certified randomness. That is
   my suggestion, not something in the case file, and it would be a different investment
   at a different valuation.
+
+## Sources
+
+1. Hibernia Express latency: https://www.submarinenetworks.com/en/systems/trans-atlantic/project-express/hibernia-express-connects-new-york-to-london-in-under-58-95ms
+2. Average institutional parent order (NBER conference paper): https://conference.nber.org/conf_papers/f145256/f145256.pdf
+3. Budish, Cramton and Shim, "The High-Frequency Trading Arms Race", QJE 2015: https://conference.nber.org/conf_papers/f69665.pdf ; summary: https://www.richmondfed.org/publications/research/econ_focus/2015/q3/research_spotlight
+4. Aquilina, Budish and O'Neill, "Quantifying the High-Frequency Trading Arms Race", QJE 2022: https://www.nber.org/system/files/working_papers/w29011/w29011.pdf
+5. ICE wireless latency, New Jersey metro: https://www.ice.com/market-data/connectivity-and-feeds/wireless/new-jersey-metro
+6. Liquidnet, "Defining a Block in the 21st Century": https://www.liquidnet.com/expert-insights/defining-a-block-in-the-21st-century
 
 ## How to run
 
@@ -230,7 +307,8 @@ Claude Code (Claude Fable 5.2) was used throughout, with me directing the analys
   distance model and figure, and drafted this write-up.
 - **I directed:** the unit-economics framing. I asked for the rounds implied by $50M, the
   profit per round for each strategy, the firm-versus-startup split under a take rate, who
-  bears the operating cost, and a dollar value for the line's delay.
+  bears the operating cost, a dollar value for the line's delay, the conditions for
+  profitability, and published data to replace the AI's placeholder assumptions.
 - **Where I corrected the AI:** it had applied the $0.001 classical cost to the existing
   line. That figure belongs to the no-communication demo; the line's cost is now a stated
   assumption with a break-even.
@@ -247,6 +325,11 @@ Claude Code (Claude Fable 5.2) was used throughout, with me directing the analys
   quantum repeaters would change it, and the case file gives no evidence of either.
 - The value-of-time result assumes exponential decay of the opportunity. The 36% threshold
   does not depend on that; the 46 ms half-life does.
-- Line latency, the block-trade example and the take rates are my assumptions.
+- The take rates, the 20 bp edge and the reading of 84 minutes as a half-life are my
+  assumptions. The statements about how block desks coordinate are my understanding.
+- The published figures were taken from search summaries of the sources in the time
+  available, not from reading each paper in full. The 97 ms and 7 ms figures come from a
+  Richmond Fed summary of [3]. The 58.95 ms figure is not labelled one-way or round trip
+  in the coverage; round trip fits the cable's length.
 - The sensitivity to signal bias covers equal bias at both desks only, not correlated signals.
 - Nothing was run on real quantum hardware; the 82% is the startup's number.

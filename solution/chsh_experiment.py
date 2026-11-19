@@ -50,10 +50,14 @@ FIBRE_INDEX = 1.47
 ACCIDENTAL_RATES_HZ = (0.001, 0.1, 10.0)  # noise coincidences per second, swept
 COST_LINE = 0.0  # the line is already paid for; the case file gives no per-round cost
 TAKE_RATES = (0.10, 0.20, 0.30)  # startup fee as a share of the firm's gross gain
-# Illustrative block trade, for putting a dollar value on the line's delay.
-BLOCK_NOTIONAL = 10e6  # $10M order
+# Block trade, for putting a dollar value on the line's delay. Size and duration are the
+# average institutional parent order in an NBER study of 2012-2016 algorithmic orders.
+BLOCK_NOTIONAL = 287_000.0  # published average
 BLOCK_ALPHA_BP = 20.0  # expected edge the desk is trying to capture, in basis points
-BLOCK_HALF_LIFE_S = 30 * 60.0  # that edge fades over about half an hour
+BLOCK_HALF_LIFE_S = 84 * 60.0  # published average working time, read as the half-life
+ES_SPY_MS = 7.0  # median life of an ES-SPY arbitrage, 2011 (Budish, Cramton, Shim 2015)
+NJ_LINE_MS = 0.1178  # Mahwah to Secaucus one-way wireless latency published by ICE
+PUBLISHED_NY_LONDON_RTT_MS = 58.95  # Hibernia Express, read as round trip
 ANNUAL_VOL = 0.25  # single-stock volatility
 TRADING_SECONDS_PER_YEAR = 252 * 6.5 * 3600
 
@@ -238,6 +242,15 @@ def value_of_time(line_ms: float) -> dict:
         "delay_cost_per_ms_needed": delay_cost_needed / line_ms,
         "opportunity_half_life_ms_below_which_quantum_wins": half_life_needed,
         "delay_cost_at_which_quantum_edge_is_full": PAYOFF - COST_LINE - c,
+        "half_life_over_line_delay_ratio": half_life_needed / line_ms,
+        "published_ny_london_one_way_ms": PUBLISHED_NY_LONDON_RTT_MS / 2,
+        "nj_data_centre_line_ms": NJ_LINE_MS,
+        "nj_implied_distance_km": NJ_LINE_MS / 1e3 * C_KM_S,
+        "half_life_ms_needed_between_nj_data_centres": NJ_LINE_MS * half_life_needed / line_ms,
+        "breakeven_stake_per_round_usd": (COST_QUANTUM - COST_CLASSICAL)
+        / (2 * (P_QUANTUM_CLAIM - 0.75)),
+        "line_value_at_es_spy_half_life": float(line_value(ES_SPY_MS, line_ms)),
+        "ms_between_entangled_pairs": 1e3 / PAIR_RATE_HZ,
         "block_example": {
             "notional": BLOCK_NOTIONAL,
             "opportunity_usd": opportunity,
@@ -512,11 +525,14 @@ def make_figure(res: dict, bias, edge_meas, edge_ideal) -> None:
             va="bottom", fontsize=9)
     ax.text(8e6, ev["classical_no_comm_75"] - 2, "A. Classical, act now", color=ink, ha="right",
             va="top", fontsize=9)
-    ax.text(1.3, 90, "B leads only\nin this zone", color=ink2, fontsize=8, va="center")
+    ax.text(1.3, 96, "B leads only\nin this zone", color=ink2, fontsize=8, va="center")
     block_ms = BLOCK_HALF_LIFE_S * 1e3
     ax.axvline(block_ms, color=muted, lw=1, ls=(0, (4, 3)))
-    ax.text(block_ms * 0.8, 20, "block order\n(~30 min,\nmy assumption)", color=ink2, fontsize=8,
+    ax.text(block_ms * 0.8, 20, "average institutional\norder: 84 min", color=ink2, fontsize=8,
             ha="right", va="center")
+    ax.axvline(ES_SPY_MS, color=muted, lw=1, ls=(0, (4, 3)))
+    ax.text(ES_SPY_MS * 0.85, 66, "index arbitrage,\n2011 median: 7 ms", color=ink2,
+            fontsize=8, ha="right", va="bottom")
     ax.set_xscale("log")
     ax.set_xlim(1, 1e7)
     ax.set_ylim(0, 106)
