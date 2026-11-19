@@ -299,6 +299,24 @@ uv run python -m pytest tests/test_chsh.py
 
 Runs in under a minute on a laptop. The quantum circuits are simulated on Qiskit Aer.
 
+## Author's note
+
+I do a lot of investment work, and most of it comes down to quantifying a business. That
+is why I approached this challenge through unit economics before the physics. I did not
+want to judge the startup on whether 82% beats 74%. I wanted to know what one round is
+worth, to whom, and who pays for it.
+
+That habit set the questions I asked. How many rounds does $50M imply? What does each
+strategy earn per round? If the startup takes a fee, what is left for the trading firm, and
+at what fee does the firm walk away? Who bears the running cost?
+
+The part that interested me most was putting a number on time and on edge. The startup's
+product only competes with the desks' existing line on speed, so its value should equal
+what a trade loses while waiting for that line. Once that was written as dollars per round,
+the answer was clear. An edge has to fade within milliseconds for the product to matter,
+and the investing it was pitched for does not work on that clock. Working that through is
+what convinced me the claim would not be valid in an investing setting.
+
 ## How AI was used
 
 Claude Code (Claude Fable 5.2) was used throughout, with me directing the analysis.
