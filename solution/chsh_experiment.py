@@ -21,13 +21,11 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, transpile
 from qiskit.quantum_info import Statevector
 from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel, depolarizing_error
 from scipy import optimize, stats
-
-from qhack import run_counts
 
 SEED = 20261119
 OUT = Path(__file__).parent / "results"
@@ -52,6 +50,12 @@ FIBRE_INDEX = 1.47
 ACCIDENTAL_RATES_HZ = (0.001, 0.1, 10.0)  # noise coincidences per second, swept
 COST_LINE = 0.0  # the line is already paid for; the case file gives no per-round cost
 TAKE_RATES = (0.10, 0.20, 0.30)  # startup fee as a share of the firm's gross gain
+# Illustrative block trade, for putting a dollar value on the line's delay.
+BLOCK_NOTIONAL = 10e6  # $10M order
+BLOCK_ALPHA_BP = 20.0  # expected edge the desk is trying to capture, in basis points
+BLOCK_HALF_LIFE_S = 30 * 60.0  # that edge fades over about half an hour
+ANNUAL_VOL = 0.25  # single-stock volatility
+TRADING_SECONDS_PER_YEAR = 252 * 6.5 * 3600
 
 # Measurement angles (radians, in the X-Z plane) for input bit 0 and 1.
 ALICE = (0.0, math.pi / 4)
@@ -119,7 +123,10 @@ def simulate_rounds(n: int, visibility: float, seed: int) -> dict:
     a_one = {}  # P(a=1 | x, y): must not depend on y if nothing is signalled
     for x, y in itertools.product((0, 1), repeat=2):
         shots = int(np.sum((xs == x) & (ys == y)))
-        counts = run_counts(chsh_circuit(x, y), backend, shots=shots)
+        # Called directly rather than through qhack.run_counts so the seed is honoured.
+        job = backend.run(transpile(chsh_circuit(x, y), backend), shots=shots,
+                          seed_simulator=seed + 2 * x + y)
+        counts = job.result().get_counts()
         for bits, c in counts.items():
             a, b = int(bits[-1]), int(bits[0])  # qubit 0 is the rightmost character
             wins += c * ((a ^ b) == (x & y))
@@ -208,6 +215,41 @@ def unit_economics() -> dict:
     }
 
 
+def line_value(half_life_ms, line_ms: float):
+    """Net $ per round from waiting for the line, if the opportunity decays while you wait."""
+    kept = 0.5 ** (line_ms / np.asarray(half_life_ms, dtype=float))
+    return PAYOFF * kept - COST_LINE
+
+
+def value_of_time(line_ms: float) -> dict:
+    """What a delay of line_ms must cost before the entangled strategy beats the line."""
+    q = float(ev_per_round(P_QUANTUM_CLAIM, COST_QUANTUM))
+    c = float(ev_per_round(0.75, COST_CLASSICAL))
+    delay_cost_needed = PAYOFF - COST_LINE - q  # line nets 100 minus the delay cost
+    share = delay_cost_needed / PAYOFF
+    half_life_needed = line_ms * math.log(2) / -math.log(1 - share)
+    # Illustrative block trade.
+    opportunity = BLOCK_NOTIONAL * BLOCK_ALPHA_BP / 1e4
+    lost = opportunity * (1 - 0.5 ** (line_ms / 1e3 / BLOCK_HALF_LIFE_S))
+    sigma_move = BLOCK_NOTIONAL * ANNUAL_VOL * math.sqrt(line_ms / 1e3 / TRADING_SECONDS_PER_YEAR)
+    return {
+        "delay_cost_per_round_for_quantum_to_beat_line": delay_cost_needed,
+        "share_of_opportunity_lost_needed": share,
+        "delay_cost_per_ms_needed": delay_cost_needed / line_ms,
+        "opportunity_half_life_ms_below_which_quantum_wins": half_life_needed,
+        "delay_cost_at_which_quantum_edge_is_full": PAYOFF - COST_LINE - c,
+        "block_example": {
+            "notional": BLOCK_NOTIONAL,
+            "opportunity_usd": opportunity,
+            "half_life_s": BLOCK_HALF_LIFE_S,
+            "expected_loss_from_line_delay_usd": lost,
+            "share_lost": lost / opportunity,
+            "one_sigma_price_move_during_delay_usd": sigma_move,
+            "block_half_life_over_required_half_life": BLOCK_HALF_LIFE_S * 1e3 / half_life_needed,
+        },
+    }
+
+
 def fibre_model(length_km, accidental_hz: float):
     """Pair rate and win rate if the 40 km link were simply made longer.
 
@@ -283,7 +325,7 @@ def main() -> None:
     # 5a. Distance.
     dist = {}
     for acc in ACCIDENTAL_RATES_HZ:
-        f = lambda L, acc=acc: float(fibre_model(L, acc)[1]) - res["economics"][  # noqa: E731
+        f = lambda L, acc=acc: float(fibre_model(L, acc)[1]) - res["economics"][
             "breakeven_quantum_win_rate"
         ]
         dist[f"accidentals_{acc}_hz"] = {
@@ -310,6 +352,7 @@ def main() -> None:
         "assumed_line_one_way_ms": line_ms,
         "light_one_way_ms_test_link": TEST_LINK_KM / C_KM_S * 1e3,
     }
+    res["value_of_time"] = value_of_time(line_ms)
 
     # 6. Sensitivity to the input statistics.
     bias = np.round(np.linspace(0.05, 0.95, 91), 4)
@@ -451,33 +494,38 @@ def make_figure(res: dict, bias, edge_meas, edge_ideal) -> None:
     ax.set_title("1. Win rate on the startup's own game")
     ax.grid(axis="y", visible=False)
 
-    # (b) $ per round vs decision deadline
+    # (b) $ per round vs how fast the opportunity fades
     ax = axs[0, 1]
     line_ms = res["latency"]["assumed_line_one_way_ms"]
-    light_ms = res["latency"]["light_one_way_ms"]
-    t = np.array([0.0, line_ms, line_ms, 60.0])
-    ax.plot(t, [ev["classical_no_comm_75"]] * 2 + [ev["classical_with_line_100"]] * 2,
-            color=aqua, lw=2)
-    ax.plot([0, 60], [ev["quantum_measured_82"]] * 2, color=orange, lw=2)
-    ax.plot([0, 60], [ev["classical_no_comm_75"]] * 2, color=blue, lw=2, ls=(0, (1, 1.5)))
-    ax.axvline(light_ms, color=muted, lw=1, ls=(0, (4, 3)))
-    ax.text(light_ms - 0.8, 104, f"light-speed limit\n{light_ms:.1f} ms", color=ink2, fontsize=8,
-            ha="right", va="top")
-    ax.text(59.5, ev["classical_with_line_100"] - 3, "C. Classical over existing line",
-            color=ink, ha="right", va="top", fontsize=9)
-    ax.text(59.5, ev["quantum_measured_82"] + 1.5,
-            "B. Entangled (only if a NY–London quantum link existed)", color=ink, ha="right",
+    vot = res["value_of_time"]
+    h_star = vot["opportunity_half_life_ms_below_which_quantum_wins"]
+    h = np.logspace(0, 7, 500)
+    ax.axvspan(1, h_star, color=orange, alpha=0.07, lw=0)
+    ax.plot(h, line_value(h, line_ms), color=aqua, lw=2)
+    ax.plot([1, 1e7], [ev["quantum_measured_82"]] * 2, color=orange, lw=2)
+    ax.plot([1, 1e7], [ev["classical_no_comm_75"]] * 2, color=blue, lw=2)
+    ax.plot([h_star], [ev["quantum_measured_82"]], "o", color=ink, ms=6, zorder=5)
+    ax.annotate(f"break-even:\nhalf-life {h_star:.0f} ms", (h_star, ev["quantum_measured_82"]),
+                xytext=(h_star * 1.5, 77), color=ink, fontsize=8.5, va="center")
+    ax.text(8e6, 96, "C. Wait for the existing line", color=ink, ha="right", va="top", fontsize=9)
+    ax.text(8e6, ev["quantum_measured_82"] + 1.5, "B. Entangled, act now", color=ink, ha="right",
             va="bottom", fontsize=9)
-    ax.text(59.5, ev["classical_no_comm_75"] - 2, "A. Classical, no communication", color=ink,
-            ha="right", va="top", fontsize=9)
-    ax.axvspan(0, line_ms, color=orange, alpha=0.07, lw=0)
-    ax.text(1.0, 36, f"only window where\nB can lead: under\n~{line_ms:.0f} ms",
-            color=ink2, fontsize=8, ha="left", va="center")
-    ax.set_xlim(0, 60)
-    ax.set_ylim(25, 106)
-    ax.set_xlabel("Time each desk has to act after its signal arrives (ms), New York–London")
+    ax.text(8e6, ev["classical_no_comm_75"] - 2, "A. Classical, act now", color=ink, ha="right",
+            va="top", fontsize=9)
+    ax.text(1.3, 90, "B leads only\nin this zone", color=ink2, fontsize=8, va="center")
+    block_ms = BLOCK_HALF_LIFE_S * 1e3
+    ax.axvline(block_ms, color=muted, lw=1, ls=(0, (4, 3)))
+    ax.text(block_ms * 0.8, 20, "block order\n(~30 min,\nmy assumption)", color=ink2, fontsize=8,
+            ha="right", va="center")
+    ax.set_xscale("log")
+    ax.set_xlim(1, 1e7)
+    ax.set_ylim(0, 106)
+    ax.set_xticks([1, 10, 100, 1e3, 1e4, 6e4, 6e5, 3.6e6])
+    ax.set_xticklabels(["1 ms", "10 ms", "100 ms", "1 s", "10 s", "1 min", "10 min", "1 h"])
+    ax.minorticks_off()
+    ax.set_xlabel("How fast the trading opportunity fades (half-life, log scale)")
     ax.set_ylabel("Net $ per round")
-    ax.set_title("2. Value per round depends on the decision deadline")
+    ax.set_title(f"2. The line's {line_ms:.0f} ms delay only matters for very short-lived trades")
 
     # (c) win rate vs fibre length
     ax = axs[1, 0]

@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "solution"))
-import chsh_experiment as ce  # noqa: E402
+import chsh_experiment as ce
 
 
 def test_classical_ceiling_is_75_percent():
