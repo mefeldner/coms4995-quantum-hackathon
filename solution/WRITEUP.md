@@ -271,6 +271,40 @@ to "mostly attributable to something free".
 - The raw trial data, including whether rounds with a lost photon were counted. If they
   were dropped, 82% overstates what a desk that must answer every round would get.
 
+**Under what circumstances this could work.** The same five conditions, turned into a
+description of the customer the startup would need:
+
+- **Two sites that each see their own signal.** Neither site needs the other's news; they
+  only need their actions to line up. This rules out arbitrage between venues, where the
+  whole trade is the news from the other side.
+- **A decision that expires faster than the line can deliver.** The opportunity's half-life
+  must be under 1.5 times the line delay. Between exchange data centres 118 microseconds
+  apart, that is under 0.18 ms.
+- **Sites within the link's proven range.** That is tens of kilometres, such as the New
+  Jersey exchange data centres at about 35 km, and not across an ocean.
+- **A pair already waiting when the signal arrives.** For decisions made in 5 to 10
+  microseconds that means stored pairs, or more than 100,000 pairs a second against today's
+  1,000.
+- **A payoff with the game's shape and enough at stake.** Signals close to 50/50, "match
+  unless both are 1", more than $0.56 at stake per round, and enough rounds to pay for the
+  link.
+
+I could not find a trading workflow that meets all five. The startup would need to name one.
+
+**How the startup should change the pitch**
+
+| Current pitch | What it should say instead |
+| --- | --- |
+| "Better than any classical strategy" | "Better than any strategy where the desks cannot communicate in time", with the customer's own line as the comparison |
+| Block orders between New York and London | Microsecond decisions between data centres tens of kilometres apart, where the link has been shown to work |
+| $50M annual opportunity | Value added per round over the customer's best alternative: 14% of the stake less $0.08, multiplied by a volume the customer confirms |
+| 82% against 74% over 1,000 trials | A larger sample, with rounds where a photon was lost counted as answered classically |
+| 1,000 pairs a second on a test link | A pair ready within the life of the trade, by storage or a much higher rate |
+| A trading service at a $25M valuation | A fee set as a share of value added (the firm walks away above about 22% of its gross gain), and a raise tied to signing one customer whose workflow passes the five conditions |
+
+If no such customer exists, the more honest pitch is the hardware: a working 40 km
+entanglement link, sold into uses where proving the absence of communication is the product.
+
 **What I would do next**
 
 - Send the startup those requests before any further diligence spend.
