@@ -351,6 +351,20 @@ the answer was clear. An edge has to fade within milliseconds for the product to
 and the investing it was pitched for does not work on that clock. Working that through is
 what convinced me the claim would not be valid in an investing setting.
 
+The same numbers also say where it could work, which is how I would want a founder to hear
+a "no". The product needs two sites that each act on their own signal, a decision that
+expires faster than a message can travel between them, sites within the tens of kilometres
+the link has been shown to cover, a pair ready the moment the signal arrives, and enough at
+stake per round to cover the running cost. That points away from block orders across an
+ocean and towards microsecond decisions between nearby data centres.
+
+So my advice to the startup would be to change the pitch, not the physics. Compare against
+the customer's own line and not against a silent classical desk. Replace the $50M with value
+added per round times a volume a customer has confirmed. Price as a share of that value.
+Tie the raise to signing one customer whose workflow passes those conditions. If no such
+customer exists, pitch the 40 km link itself, for uses where proving that two parties did
+not communicate is the product.
+
 ## How AI was used
 
 Claude Code (Claude Fable 5.2) was used throughout, with me directing the analysis.
